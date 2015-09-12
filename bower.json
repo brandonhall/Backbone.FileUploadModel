@@ -1,0 +1,16 @@
+{
+  "name": "Backbone.FileUploadModel",
+  "version": "0.6",
+  "authors": [
+    "Brandon Hall <b@brandonhall.me>"
+  ],
+  "description": "Add file uploads to Backbone models with minimal effort",
+  "main": "src/backbone.fileuploadmodel.js",
+  "keywords": [
+    "file",
+    "file-upload",
+    "backbone"
+  ],
+  "ignore": [],
+  "license": "MIT"
+}
