@@ -18,7 +18,8 @@
     fileAttribute: 'file',
     
     save: function(attrs, options) {
-
+      
+      attrs || (attrs = {});
       options || (options = {});
       
       var save = Backbone.Model.prototype.save;
