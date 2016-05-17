@@ -12,50 +12,52 @@
   if (!window.jQuery) {
     throw new Error('Backbone.FileUploadModel requires jQuery');
   }
-  
+
   Backbone.FileUploadModel = Backbone.Model.extend({
-    
+
     fileAttribute: 'file',
-    
+
     save: function(attrs, options) {
-      
+
       attrs || (attrs = {});
       options || (options = {});
-      
+
       var save = Backbone.Model.prototype.save;
       var $fileInput = options.fileInput;
+      var file = options.file;
       var fileAttribute = options.fileAttribute || this.fileAttribute;
       
-      // Do we have a fileInput option?
-      if (!$fileInput) {
-        save.call(this, attrs, options);
-        return this;
-      }
+      // Determine whether we have a jQuery or File object
+      var isjQuery = window.jQuery && $fileInput instanceof jQuery;
+      var isFileObject = window.File && $fileInput instanceof File;
       
-      // Is fileInput a jQuery object?
-      if (!$fileInput instanceof jQuery) {
-        save.call(this, attrs, options);
-        return this;
+      // Do we have a valid option?
+      if (!$fileInput && !file) {
+        return save.call(this, attrs, options);
+      }
+
+      // Is fileInput a jQuery object and is file and a file object?
+      if ( ($fileInput && !isjQuery) && (file && !isFileObject) ) {
+        return save.call(this, attrs, options);
       }
 
       // Does the fileInput have a file?
-      if (!$fileInput.val().length) {
-        save.call(this, attrs, options);
-        return this;
+      if ($fileInput && !$fileInput.val().length) {
+        return save.call(this, attrs, options);
       }
-      
+
       // Send all attributes if PATCH isn't set
       if (!options.patch) {
         _.extend(attrs, this.attributes);
       }
-      
+
       _.extend(options, { processData: false });
 
       // Modern browser check for FormData support
       if (!!(window.FormData)) {
-        
+
         // Set the fileAttribute right before FormData conversion
-        attrs[fileAttribute] = $fileInput.get(0).files[0];
+        attrs[fileAttribute] = file || $fileInput.get(0).files[0];
         
         _.extend(options, {
           data: this._getFormData(attrs),
@@ -67,7 +69,7 @@
       else {
 
         // Find the verb we'll use - following Backbone's rules here
-        var verb = attrs.id ? (options.patch ? 'PATCH' : 'PUT') : 'POST';
+        var verb = this.isNew() ? 'POST' : (options.patch ? 'PATCH' : 'PUT');
 
         _.extend(options, {
           iframe: true,
@@ -76,29 +78,27 @@
           data: attrs
         });
       }
-      
+
       // xhr with a file upload requires processData to be false
-      save.call(this, attrs, _.extend({ processData: false }, options));
-      
-      return this;
+      return save.call(this, attrs, _.extend({ processData: false }, options));
     },
-    
+
     // Turn attributes into FormData
     _getFormData: function(attrs) {
       var formData = new FormData();
-      
+
       _.each(attrs, function(value, key) {
-        
+
         // Stringify objects and arrays
         if (_.isObject(value) && !(value instanceof File)) {
           formData.append(key, JSON.stringify(value));
         }
-        
+
         else {
           formData.append(key, value);
         }
       });
-      
+
       return formData;
     }
   })
